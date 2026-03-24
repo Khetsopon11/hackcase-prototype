@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Prompt:wght@400;600;700&display=swap');
+  :root {
+    --bg: #0f0e17; --card: #1a1828; --card2: #221f35;
+    --accent: #ff6b35; --gold: #ffd166; --mint: #06d6a0;
+    --lavender: #a78bfa; --pink: #f472b6;
+    --text: #f0eff4; --muted: #9896a4; --border: rgba(255,255,255,0.08);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Nunito',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; display:flex; justify-content:center; align-items:flex-start; padding:20px; overflow-x:hidden; }
+  .phone-shell { width:375px; min-height:812px; background:var(--bg); border-radius:44px; border:2px solid rgba(255,255,255,0.1); overflow:hidden; position:relative; box-shadow:0 40px 80px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.08); }
+  .status-bar { display:flex; justify-content:space-between; align-items:center; padding:14px 24px 6px; font-size:12px; font-weight:700; color:var(--muted); }
+  .screen { display:none; animation:fadeSlide 0.35s ease; }
+  .screen.active { display:block; }
+  @keyframes fadeSlide { from{opacity:0;transform:translateX(16px)} to{opacity:1;transform:translateX(0)} }
+
+  /* ── Bottom Nav ── */
+  .bottom-nav { position:sticky; bottom:0; display:flex; background:rgba(15,14,23,0.95); backdrop-filter:blur(12px); border-top:1px solid var(--border); padding:8px 0 12px; }
+  .nav-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; cursor:pointer; transition:all 0.2s; padding:4px 0; }
+  .nav-icon { font-size:20px; }
+  .nav-label { font-size:10px; font-weight:700; color:var(--muted); transition:color 0.2s; }
+  .nav-item.active .nav-label { color:var(--gold); }
+  .nav-item.active .nav-icon { filter:drop-shadow(0 0 6px var(--gold)); }
+
+  /* ── Shared ── */
+  .section-title { font-size:13px; font-weight:800; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin:0 20px 10px; }
+  .back-btn { width:36px;height:36px; background:var(--card); border-radius:12px; display:flex;align-items:center;justify-content:center; cursor:pointer; font-size:16px; border:none; color:var(--text); }
+  .progress-bar { display:flex; justify-content:center; gap:8px; padding:8px 0 4px; }
+  .dot { width:8px;height:8px; border-radius:4px; background:var(--muted); transition:all 0.3s; }
+  .dot.active { width:24px; background:var(--gold); }
+
+  /* ── S1 Quest ── */
+  .s1-header { padding:12px 20px 0; display:flex; justify-content:space-between; align-items:center; }
+  .logo { font-family:'Prompt',sans-serif; font-weight:700; font-size:20px; background:linear-gradient(135deg,var(--gold),var(--accent)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+  .xp-pill { background:rgba(255,209,102,0.15); border:1px solid rgba(255,209,102,0.3); color:var(--gold); font-size:12px; font-weight:800; padding:4px 10px; border-radius:20px; }
+  .s1-hero { padding:16px 20px 8px; }
+  .s1-title { font-size:24px; font-weight:900; line-height:1.2; margin-bottom:4px; }
+  .s1-sub { color:var(--muted); font-size:13px; }
+  .urbit-types { padding:12px 20px; display:flex; gap:10px; overflow-x:auto; scrollbar-width:none; }
+  .urbit-types::-webkit-scrollbar{display:none}
+  .type-chip { flex-shrink:0; display:flex; align-items:center; gap:6px; padding:8px 14px; border-radius:20px; font-size:13px; font-weight:700; cursor:pointer; transition:all 0.2s; border:2px solid transparent; }
+  .type-chip.active { border-color:var(--gold); background:rgba(255,209,102,0.12); color:var(--gold); }
+  .type-chip:not(.active) { background:var(--card); color:var(--muted); }
+  .quest-list { padding:4px 20px; display:flex; flex-direction:column; gap:12px; }
+  .quest-card { background:var(--card); border-radius:20px; padding:16px; cursor:pointer; transition:all 0.25s; border:2px solid var(--border); position:relative; overflow:hidden; }
+  .quest-card::before { content:''; position:absolute; top:0;left:0;right:0; height:2px; }
+  .quest-card.cafe::before { background:linear-gradient(90deg,var(--accent),var(--gold)); }
+  .quest-card.history::before { background:linear-gradient(90deg,var(--lavender),var(--pink)); }
+  .quest-card:hover { transform:translateY(-2px); border-color:rgba(255,255,255,0.15); }
+  .quest-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; }
+  .quest-tag { font-size:11px; font-weight:800; padding:3px 8px; border-radius:8px; letter-spacing:.5px; text-transform:uppercase; }
+  .tag-cafe { background:rgba(255,107,53,0.2); color:var(--accent); }
+  .tag-history { background:rgba(167,139,250,0.2); color:var(--lavender); }
+  .quest-urbit-preview { font-size:28px; }
+  .quest-name { font-size:16px; font-weight:800; margin-bottom:4px; }
+  .quest-desc { font-size:12px; color:var(--muted); line-height:1.5; }
+  .quest-bottom { display:flex; justify-content:space-between; align-items:center; margin-top:12px; }
+  .quest-meta { display:flex; gap:12px; }
+  .meta-item { display:flex; align-items:center; gap:4px; font-size:12px; color:var(--muted); }
+  .start-btn { background:linear-gradient(135deg,var(--accent),var(--gold)); color:#000; font-weight:800; font-size:13px; padding:8px 16px; border-radius:12px; border:none; cursor:pointer; transition:all 0.2s; }
+  .start-btn:hover { transform:scale(1.05); }
+
+  /* ── S2 Match ── */
+  .s2-header { padding:12px 20px; display:flex; align-items:center; gap:12px; }
+  .s2-title { font-size:18px; font-weight:800; }
+  .match-zone { margin:0 20px 16px; background:var(--card); border-radius:24px; padding:24px 20px; text-align:center; position:relative; overflow:hidden; }
+  .blind-badge { display:inline-flex; align-items:center; gap:6px; background:rgba(6,214,160,0.12); border:1px solid rgba(6,214,160,0.3); color:var(--mint); font-size:12px; font-weight:700; padding:5px 12px; border-radius:20px; margin-bottom:16px; }
+  .avatar-row { display:flex; justify-content:center; align-items:center; gap:16px; margin:16px 0; }
+  .avatar-blob { width:64px;height:64px; border-radius:50%; display:flex;align-items:center;justify-content:center; font-size:28px; }
+  .avatar-blob.you { background:linear-gradient(135deg,var(--lavender),var(--pink)); }
+  .avatar-blob.them { background:var(--card2); border:2px dashed rgba(255,255,255,0.2); color:var(--muted); font-size:22px; }
+  .vs-text { font-size:11px;font-weight:900;color:var(--muted);letter-spacing:2px;background:var(--card2);padding:4px 8px;border-radius:8px; }
+  .match-label { font-size:13px;color:var(--muted);margin-top:4px; }
+  .match-count { font-size:28px;font-weight:900;color:var(--text);margin:8px 0 4px; }
+  .location-card { margin:0 20px 12px; background:var(--card); border-radius:20px; padding:16px; display:flex; gap:14px; align-items:center; }
+  .location-icon { width:52px;height:52px; background:linear-gradient(135deg,var(--accent),var(--gold)); border-radius:16px; display:flex;align-items:center;justify-content:center; font-size:24px; flex-shrink:0; }
+  .loc-name { font-size:16px;font-weight:800; }
+  .loc-sub { font-size:12px;color:var(--muted);margin-top:2px; }
+  .loc-badge { margin-top:6px; display:inline-block; background:rgba(255,107,53,0.15); color:var(--accent); font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px; }
+  .confirm-btn { margin:0 20px; width:calc(100% - 40px); background:linear-gradient(135deg,var(--accent),var(--gold)); color:#000; font-family:'Nunito',sans-serif; font-weight:900; font-size:16px; padding:16px; border-radius:18px; border:none; cursor:pointer; transition:all 0.2s; }
+  .confirm-btn:hover { transform:scale(1.02); }
+
+  /* ── S3 QR ── */
+  .activity-banner { margin:0 20px 16px; background:linear-gradient(135deg,#1a1828,#221f35); border-radius:24px; padding:20px; border:1px solid var(--border); }
+  .activity-steps { display:flex; flex-direction:column; gap:14px; margin-top:14px; }
+  .step { display:flex; align-items:center; gap:12px; }
+  .step-num { width:30px;height:30px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;flex-shrink:0; }
+  .step-num.done{background:var(--mint);color:#000} .step-num.active{background:var(--gold);color:#000} .step-num.pending{background:var(--card2);color:var(--muted)}
+  .step-text{font-size:14px;font-weight:600} .step-text.done{color:var(--muted);text-decoration:line-through} .step-text.active{color:var(--text)} .step-text.pending{color:var(--muted)}
+  .qr-zone { margin:0 20px 16px; background:var(--card); border-radius:24px; padding:20px; text-align:center; }
+  .qr-label { font-size:14px;font-weight:700;margin-bottom:16px;color:var(--gold); }
+  .qr-box { width:160px;height:160px;margin:0 auto 16px;background:white;border-radius:16px;padding:12px;position:relative;cursor:pointer;transition:all 0.2s; }
+  .qr-box:hover{transform:scale(1.03)}
+  .qr-inner { width:100%;height:100%;background:repeating-linear-gradient(0deg,transparent,transparent 10px,#000 10px,#000 12px),repeating-linear-gradient(90deg,transparent,transparent 10px,#000 10px,#000 12px);border-radius:4px;position:relative; }
+  .qr-center { position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:40px;height:40px;background:white;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px; }
+  .scan-btn { width:100%;background:var(--mint);color:#000;font-family:'Nunito',sans-serif;font-weight:900;font-size:15px;padding:14px;border-radius:16px;border:none;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px; }
+  .scan-btn:hover{transform:scale(1.02)}
+
+  /* ── S4 Gotcha ── */
+  .gotcha-bg { padding:20px; text-align:center; position:relative; overflow:hidden; }
+  .burst { position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:300px;height:300px;background:radial-gradient(circle,rgba(255,209,102,0.15) 0%,transparent 70%);border-radius:50%;animation:pulse-burst 2s ease-in-out infinite; }
+  @keyframes pulse-burst { 0%,100%{transform:translate(-50%,-50%) scale(1);opacity:1} 50%{transform:translate(-50%,-50%) scale(1.15);opacity:0.7} }
+  .gotcha-label { font-family:'Prompt',sans-serif;font-size:36px;font-weight:700;background:linear-gradient(135deg,var(--gold),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:4px;position:relative;z-index:1; }
+  .gotcha-sub { color:var(--muted);font-size:14px;margin-bottom:20px;position:relative;z-index:1; }
+  .urbit-card-big { background:var(--card);border-radius:28px;padding:24px 20px;border:2px solid rgba(255,209,102,0.25);position:relative;overflow:hidden;margin-bottom:16px;z-index:1; }
+  .urbit-card-big::before { content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,209,102,0.05) 0%,transparent 60%); }
+  .urbit-emoji-big { font-size:80px;margin-bottom:8px;display:block;animation:bounce-urbit 1.5s ease-in-out infinite; }
+  @keyframes bounce-urbit { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+  .urbit-name-big { font-family:'Prompt',sans-serif;font-size:28px;font-weight:700;color:var(--gold);margin-bottom:4px; }
+  .rarity-row { display:flex;justify-content:center;gap:8px;margin-bottom:16px; }
+  .rarity-star{color:var(--gold);font-size:18px} .rarity-star.empty{color:rgba(255,255,255,0.1)}
+  .stats-row { display:flex;justify-content:space-around;background:var(--card2);border-radius:16px;padding:12px; }
+  .stat{text-align:center} .stat-val{font-size:18px;font-weight:900;color:var(--mint)} .stat-label{font-size:11px;color:var(--muted);margin-top:2px}
+  .reward-card { background:linear-gradient(135deg,rgba(255,107,53,0.12),rgba(255,209,102,0.08));border:1px solid rgba(255,107,53,0.25);border-radius:20px;padding:16px;display:flex;align-items:center;gap:14px;margin-bottom:16px;text-align:left;z-index:1;position:relative; }
+  .reward-icon{font-size:32px} .reward-name{font-size:15px;font-weight:800} .reward-val{font-size:22px;font-weight:900;color:var(--accent)} .reward-expire{font-size:11px;color:var(--muted)}
+  .done-btn { width:100%;background:linear-gradient(135deg,var(--accent),var(--gold));color:#000;font-family:'Nunito',sans-serif;font-weight:900;font-size:16px;padding:16px;border-radius:18px;border:none;cursor:pointer;transition:all 0.2s;z-index:1;position:relative; }
+  .done-btn:hover{transform:scale(1.02)}
+  .confetti{position:absolute;top:0;left:0;right:0;pointer-events:none}
+
+  /* ── COLLECTION SCREEN ── */
+  .col-header { padding:16px 20px 8px; display:flex; justify-content:space-between; align-items:center; }
+  .col-title { font-family:'Prompt',sans-serif; font-size:22px; font-weight:700; background:linear-gradient(135deg,var(--lavender),var(--pink)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+
+  .col-stats { display:flex; gap:10px; margin:0 20px 16px; }
+  .col-stat-box { flex:1; background:var(--card); border-radius:16px; padding:12px; text-align:center; border:1px solid var(--border); }
+  .col-stat-val { font-size:22px; font-weight:900; color:var(--gold); }
+  .col-stat-label { font-size:11px; color:var(--muted); margin-top:2px; }
+
+  .col-filter { display:flex; gap:8px; padding:0 20px 12px; overflow-x:auto; scrollbar-width:none; }
+  .col-filter::-webkit-scrollbar{display:none}
+  .filter-chip { flex-shrink:0; padding:6px 14px; border-radius:16px; font-size:12px; font-weight:700; cursor:pointer; transition:all 0.2s; border:1.5px solid transparent; }
+  .filter-chip.on { background:rgba(167,139,250,0.15); border-color:var(--lavender); color:var(--lavender); }
+  .filter-chip:not(.on) { background:var(--card); color:var(--muted); }
+
+  .urbit-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:0 20px 16px; }
+
+  .urbit-tile { background:var(--card); border-radius:20px; padding:16px 12px; text-align:center; border:2px solid var(--border); cursor:pointer; transition:all 0.25s; position:relative; overflow:hidden; }
+  .urbit-tile:hover { transform:translateY(-3px); border-color:rgba(255,255,255,0.18); }
+  .urbit-tile.locked { opacity:0.4; filter:grayscale(1); cursor:default; }
+  .urbit-tile.locked:hover { transform:none; }
+
+  .urbit-tile::after { content:''; position:absolute; top:0;left:0;right:0;height:2px; }
+  .urbit-tile.cafe::after { background:linear-gradient(90deg,var(--accent),var(--gold)); }
+  .urbit-tile.history::after { background:linear-gradient(90deg,var(--lavender),var(--pink)); }
+  .urbit-tile.travel::after { background:linear-gradient(90deg,var(--mint),#4ecdc4); }
+  .urbit-tile.rare::after { background:linear-gradient(90deg,var(--pink),var(--lavender),var(--gold)); }
+
+  .tile-emoji { font-size:44px; margin-bottom:6px; display:block; }
+  .tile-name { font-size:14px; font-weight:800; margin-bottom:2px; }
+  .tile-type { font-size:11px; color:var(--muted); margin-bottom:8px; }
+  .tile-stars { display:flex; justify-content:center; gap:3px; font-size:12px; }
+  .tile-star { color:var(--gold); }
+  .tile-star.e { color:rgba(255,255,255,0.1); }
+
+  .tile-new-badge { position:absolute; top:8px; right:8px; background:var(--accent); color:#fff; font-size:9px; font-weight:900; padding:2px 6px; border-radius:6px; letter-spacing:.5px; }
+  .tile-lock-icon { position:absolute; top:50%;left:50%; transform:translate(-50%,-50%); font-size:28px; z-index:2; }
+
+  /* Detail modal */
+  .modal-overlay { display:none; position:absolute; inset:0; background:rgba(0,0,0,0.7); z-index:100; justify-content:flex-end; flex-direction:column; backdrop-filter:blur(4px); }
+  .modal-overlay.open { display:flex; animation:fadeIn .25s ease; }
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  .modal-sheet { background:var(--card2); border-radius:28px 28px 0 0; padding:24px 20px 32px; animation:slideUp .3s ease; }
+  @keyframes slideUp{from{transform:translateY(60px);opacity:0}to{transform:translateY(0);opacity:1}}
+  .modal-handle { width:40px;height:4px;background:rgba(255,255,255,0.15);border-radius:2px;margin:0 auto 20px; }
+  .modal-emoji { font-size:64px; text-align:center; display:block; margin-bottom:8px; }
+  .modal-name { font-family:'Prompt',sans-serif;font-size:26px;font-weight:700;color:var(--gold);text-align:center; }
+  .modal-sub { color:var(--muted);font-size:13px;text-align:center;margin-bottom:16px; }
+  .modal-stats { display:flex;justify-content:space-around;background:var(--bg);border-radius:16px;padding:14px;margin-bottom:16px; }
+  .modal-desc { font-size:13px;color:var(--muted);line-height:1.6;text-align:center;margin-bottom:20px; }
+  .modal-close { width:100%;background:var(--card);color:var(--text);font-family:'Nunito',sans-serif;font-weight:800;font-size:15px;padding:14px;border-radius:16px;border:none;cursor:pointer; }
+</style>
+</head>
+<body>
+<div class="phone-shell">
+  <div class="status-bar"><span>9:41</span><span>⚡ 87%</span></div>
+
+  <!-- ══ S1: Quest ══ -->
+  <div class="screen active" id="s1">
+    <div class="s1-header">
+      <span class="logo">SideQuest ✦</span>
+      <span class="xp-pill">⚡ 240 XP</span>
+    </div>
+    <div class="s1-hero">
+      <div class="s1-title">เลือก Quest<br>ของคุณ 🗺️</div>
+      <div class="s1-sub">จับคู่ตามประเภท Urbit ที่คุณต้องการ</div>
+    </div>
+    <div class="urbit-types">
+      <div class="type-chip active">☕ สายคาเฟ่</div>
+      <div class="type-chip">🏛️ สายประวัติศาสตร์</div>
+      <div class="type-chip">🚇 สายเดินทาง</div>
+      <div class="type-chip">🌿 สายธรรมชาติ</div>
+    </div>
+    <div class="quest-list">
+      <div class="quest-card cafe" onclick="goScreen('s2-solo')">
+        <div class="quest-top"><span class="quest-tag tag-cafe">☕ CAFÉ</span><span class="quest-urbit-preview">☕</span></div>
+        <div class="quest-name">Kaffeine Morning Ritual</div>
+        <div class="quest-desc">พบกันที่ Kaffeine Cafe อารีย์ ออเดอร์เมนูเดียวกัน และ unlock Coffeon ด้วยกัน</div>
+        <div class="quest-bottom">
+          <div class="quest-meta"><div class="meta-item">⏰ 45 นาที</div><div class="meta-item">👥 1 คน</div></div>
+          <button class="start-btn" onclick="event.stopPropagation();goScreen('s2-solo')">เริ่ม →</button>
+        </div>
+      </div>
+      <div class="quest-card history" onclick="goScreen('s2')">
+        <div class="quest-top"><span class="quest-tag tag-history">🏛️ HISTORY</span><span class="quest-urbit-preview">🐱</span></div>
+        <div class="quest-name">Old Town Napo Hunt</div>
+        <div class="quest-desc">สำรวจหอกลองในย่านเจริญกรุง ค้นหา Napo แมวนักนอนในสถานที่ประวัติศาสตร์</div>
+        <div class="quest-bottom">
+          <div class="quest-meta"><div class="meta-item">⏰ 60 นาที</div><div class="meta-item">👥 2 คน</div></div>
+          <button class="start-btn" onclick="event.stopPropagation();goScreen('s2')">เริ่ม →</button>
+        </div>
+      </div>
+    </div>
+    <div class="progress-bar"><div class="dot active"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+    <div class="bottom-nav" id="nav1">
+      <div class="nav-item active" onclick="switchTab('s1','nav1',0)"><span class="nav-icon">🗺️</span><span class="nav-label">Quest</span></div>
+      <div class="nav-item" onclick="switchTab('scol','nav1',1)"><span class="nav-icon">✨</span><span class="nav-label">Collection</span></div>
+    </div>
+  </div>
+
+  <!-- ══ S2: Blind Match ══ -->
+   <div class="screen" id="s2-solo">
+    <div class="s2-header">
+      <button class="back-btn" onclick="goScreen('s1')">←</button>
+      <span class="s2-title">Solo Quest</span>
+    </div>
+
+    <div class="match-zone" style="background: linear-gradient(135deg, #2d2d2d, #1a1a1a);">
+      <div class="blind-badge" style="background: var(--mint); color: #000;">✨ Solo Mode • ลุยเดี่ยว</div>
+      <div style="font-size: 13px; color: var(--muted); margin-bottom: 12px;">เตรียมพร้อมสำหรับภารกิจส่วนตัว</div>
+      
+      <div class="avatar-row">
+        <div style="position: relative;">
+          <div class="avatar-blob you" style="border-color: var(--mint); width: 80px; height: 80px; font-size: 40px;">🧑‍เดิน</div>
+          <div style="font-size:12px; color:var(--mint); margin-top:8px; text-align:center; font-weight: bold;">พร้อมลุย!</div>
+        </div>
+      </div>
+
+      <div class="match-label" style="margin-top: 15px;">สถานะเควสปัจจุบัน</div>
+      <div class="match-count" style="color: #fff;">รอยืนยันที่หน้าร้าน</div>
+      <div style="font-size: 12px; color: var(--muted);">ทำภารกิจสำเร็จรับ 50 EXP</div>
+    </div>
+
+    <div class="section-title">📍 จุดหมายปลายทาง (Sponsor)</div>
+    <div class="location-card" style="border: 1px solid rgba(0, 255, 170, 0.2);">
+      <div class="location-icon">☕</div>
+      <div>
+        <div class="loc-name">Kaffeine Cafe</div>
+        <div class="loc-sub">อารีย์ ซอย 7 • เปิด 08:00–20:00</div>
+        <div class="loc-badge" style="background: rgba(0, 255, 170, 0.1); color: var(--mint);">🎯 Solo Reward Available</div>
+      </div>
+    </div>
+
+    <div style="padding: 20px;">
+        <button class="primary-btn" onclick="goScreen('s3-solo')" style="width: 100%; background: var(--mint); color: #000; border: none; padding: 15px; border-radius: 12px; font-weight: bold;">
+            เช็กอินเพื่อเริ่มเควส
+        </button>
+    </div>
+</div>
+  <div class="screen" id="s2">
+    <div class="s2-header"><button class="back-btn" onclick="goScreen('s1')">←</button><span class="s2-title">จับคู่ Blind Match</span></div>
+    <div class="match-zone">
+      <div class="blind-badge">🔒 Blind Mode • ไม่เห็นหน้ากัน</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:8px">กำลังมองหาคนที่จะมา Quest นี้ด้วย...</div>
+      <div class="avatar-row">
+        <div><div class="avatar-blob you">🧑</div><div style="font-size:11px;color:var(--muted);margin-top:4px;text-align:center">คุณ</div></div>
+        <div class="vs-text">VS</div>
+        <div><div class="avatar-blob them">?</div><div style="font-size:11px;color:var(--muted);margin-top:4px;text-align:center">รอคู่...</div></div>
+      </div>
+      <div class="match-label">คนที่รอ Quest นี้อยู่</div>
+      <div class="match-count">3 คน</div>
+      <div style="font-size:12px;color:var(--mint)">✓ ยืนยันการจับคู่แล้ว!</div>
+    </div>
+    <div class="section-title">📍 จุดนัดพบ (Sponsor)</div>
+    <div class="location-card">
+      <div class="location-icon">☕</div>
+      <div><div class="loc-name">Kaffeine Cafe</div><div class="loc-sub">อารีย์ ซอย 7 • เปิด 08:00–20:00</div><div class="loc-badge">🎯 Sponsor Location</div></div>
+    </div>
+    <div style="padding:0 20px 8px"><button class="confirm-btn" onclick="goScreen('s3')">✓ ยืนยัน & นัดพบ</button></div>
+    <div class="progress-bar"><div class="dot"></div><div class="dot active"></div><div class="dot"></div><div class="dot"></div></div>
+  </div>
+
+  <!-- ══ S3: QR ══ -->
+    <div class="screen" id="s3-solo">
+    <div class="s2-header">
+      <button class="back-btn" onclick="goScreen('s2-solo')">←</button>
+      <span class="s2-title">ทำกิจกรรม & แสกน</span>
+    </div>
+
+    <div class="activity-banner" style="border-left: 4px solid var(--mint);">
+      <div style="font-size: 14px; font-weight: 800; margin-bottom: 4px; color: var(--mint);">☕ Solo Coffee Break</div>
+      <div style="font-size: 12px; color: var(--muted);">ทำภารกิจส่วนตัวเพื่อรับ Urbit</div>
+      
+      <div class="activity-steps">
+        <div class="step">
+          <div class="step-num done">✓</div>
+          <div class="step-text done">ถึงร้าน Kaffeine Cafe เรียบร้อย</div>
+        </div>
+        
+        <div class="step">
+          <div class="step-num done">✓</div>
+          <div class="step-text done">สั่งเมนูโปรดของคุณ (Solo Special)</div>
+        </div>
+        
+        <div class="step">
+          <div class="step-num active">3</div>
+          <div class="step-text active">แสกน QR ที่เคาน์เตอร์เพื่อรับ Urbit 🎯</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="scan-area" style="margin-top: 30px; text-align: center; padding: 20px;">
+      <div style="width: 200px; height: 200px; border: 2px dashed var(--mint); margin: 0 auto; border-radius: 20px; display: flex; align-items: center; justify-content: center; background: rgba(0, 255, 170, 0.05);">
+         <span style="font-size: 40px; filter: grayscale(1);">📷</span>
+      </div>
+      <div style="margin-top: 15px; font-size: 13px; color: var(--muted);">
+        หันกล้องไปที่ QR Code ของร้าน <br>
+        เพื่อยืนยันว่าคุณมาลุยเควสนี้จริง!
+      </div>
+    </div>
+
+    <div style="padding: 20px;">
+        <button class="primary-btn" style="width: 100%; background: #333; color: var(--mint); border: 1px solid var(--mint); padding: 12px; border-radius: 10px; font-size: 14px;">
+            เปิดกล้องแสกน QR
+        </button>
+    </div>
+</div>
+  <div class="screen" id="s3">
+    <div class="s2-header"><button class="back-btn" onclick="goScreen('s2')">←</button><span class="s2-title">ทำกิจกรรม & แสกน</span></div>
+    <div class="activity-banner">
+      <div style="font-size:14px;font-weight:800;margin-bottom:4px;color:var(--gold)">☕ Kaffeine Morning Ritual</div>
+      <div style="font-size:12px;color:var(--muted)">ทำครบ 3 ขั้นตอนเพื่อรับ Urbit</div>
+      <div class="activity-steps">
+        <div class="step"><div class="step-num done">✓</div><div class="step-text done">พบกันที่ Kaffeine Cafe</div></div>
+        <div class="step"><div class="step-num done">✓</div><div class="step-text done">ออเดอร์เมนูพร้อมกัน</div></div>
+        <div class="step"><div class="step-num active">3</div><div class="step-text active">แสกน QR เพื่อ unlock Urbit 🎯</div></div>
+      </div>
+    </div>
+    <div class="qr-zone">
+      <div class="qr-label">🔍 แสกน QR ที่เคาน์เตอร์ร้าน</div>
+      <div class="qr-box" onclick="simulateScan()"><div class="qr-inner"><div class="qr-center">☕</div></div></div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:12px">แตะ QR เพื่อจำลองการแสกน</div>
+      <button class="scan-btn" id="scanBtn" onclick="simulateScan()">📷 แสกน QR Code</button>
+    </div>
+    <div class="progress-bar"><div class="dot"></div><div class="dot"></div><div class="dot active"></div><div class="dot"></div></div>
+  </div>
+
+  <!-- ══ S4: Gotcha ══ -->
+  <div class="screen" id="s4">
+    <div class="burst"></div>
+    <div class="gotcha-bg">
+      <canvas class="confetti" id="confettiCanvas" width="375" height="100"></canvas>
+      <div class="gotcha-label">Gotcha! 🎉</div>
+      <div class="gotcha-sub">คุณ unlock Urbit ตัวใหม่แล้ว!</div>
+      <div class="urbit-card-big">
+        <span class="urbit-emoji-big">☕</span>
+        <div class="urbit-name-big">Coffeon</div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:12px">คอฟฟีออน • สายคาเฟ่</div>
+        <div class="rarity-row"><span class="rarity-star">★</span><span class="rarity-star">★</span><span class="rarity-star empty">★</span><span class="rarity-star empty">★</span><span class="rarity-star empty">★</span></div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:12px">Common • #042 / ∞</div>
+        <div class="stats-row">
+          <div class="stat"><div class="stat-val">+50</div><div class="stat-label">XP ที่ได้</div></div>
+          <div class="stat"><div class="stat-val">#3</div><div class="stat-label">ของคุณ</div></div>
+          <div class="stat"><div class="stat-val">☕</div><div class="stat-label">Type</div></div>
+        </div>
+      </div>
+      <div class="reward-card"><div class="reward-icon">🎁</div><div><div class="reward-name">Kaffeine Cafe</div><div class="reward-val">15% OFF</div><div class="reward-expire">หมดอายุ 31 มี.ค. 2568</div></div></div>
+      <button class="done-btn" onclick="goScreen('scol')">✦ ดู Collection ของฉัน</button>
+    </div>
+    <div class="progress-bar" style="background:transparent"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot active"></div></div>
+  </div>
+
+  <!-- ══ COLLECTION SCREEN ══ -->
+  <div class="screen" id="scol">
+    <div class="col-header">
+      <span class="col-title">My Urbits ✨</span>
+      <span class="xp-pill">⚡ 290 XP</span>
+    </div>
+
+    <div class="col-stats">
+      <div class="col-stat-box"><div class="col-stat-val">3</div><div class="col-stat-label">สะสมแล้ว</div></div>
+      <div class="col-stat-box"><div class="col-stat-val">9</div><div class="col-stat-label">ทั้งหมด</div></div>
+      <div class="col-stat-box"><div class="col-stat-val">33%</div><div class="col-stat-label">สมบูรณ์</div></div>
+    </div>
+
+    <div class="col-filter">
+      <div class="filter-chip on" onclick="filterCol(this,'all')">🌟 ทั้งหมด</div>
+      <div class="filter-chip" onclick="filterCol(this,'cafe')">☕ คาเฟ่</div>
+      <div class="filter-chip" onclick="filterCol(this,'history')">🏛️ ประวัติศาสตร์</div>
+      <div class="filter-chip" onclick="filterCol(this,'travel')">🚇 เดินทาง</div>
+    </div>
+
+    <div class="urbit-grid" id="urbitGrid">
+      <!-- filled by JS -->
+    </div>
+
+    <!-- Detail modal -->
+    <div class="modal-overlay" id="detailModal" onclick="closeModal(event)">
+      <div class="modal-sheet" id="modalSheet">
+        <div class="modal-handle"></div>
+        <span class="modal-emoji" id="mEmoji"></span>
+        <div class="modal-name" id="mName"></div>
+        <div class="modal-sub" id="mSub"></div>
+        <div class="rarity-row" id="mStars"></div>
+        <div class="modal-stats">
+          <div class="stat"><div class="stat-val" id="mXp"></div><div class="stat-label">XP ได้รับ</div></div>
+          <div class="stat"><div class="stat-val" id="mCount"></div><div class="stat-label">จำนวน</div></div>
+          <div class="stat"><div class="stat-val" id="mRarity"></div><div class="stat-label">Rarity</div></div>
+        </div>
+        <div class="modal-desc" id="mDesc"></div>
+        <button class="modal-close" onclick="document.getElementById('detailModal').classList.remove('open')">ปิด</button>
+      </div>
+    </div>
+
+    <div class="bottom-nav" id="nav2">
+      <div class="nav-item" onclick="switchTab('s1','nav2',0)"><span class="nav-icon">🗺️</span><span class="nav-label">Quest</span></div>
+      <div class="nav-item active" onclick="switchTab('scol','nav2',1)"><span class="nav-icon">✨</span><span class="nav-label">Collection</span></div>
+    </div>
+  </div>
+
+</div><!-- /phone-shell -->
+
+<script>
+const URBITS = [
+  { id:'coffeon', name:'Coffeon', emoji:'☕', type:'cafe', typeLabel:'สายคาเฟ่', stars:2, rarity:'Common', xp:'+50', count:'x2', desc:'เออร์บิตที่มีรูปร่างเหมือนแก้วกาแฟ Latte Art แฝงตัวอยู่ตามคาเฟ่ย่านอารีย์และทองหล่อ', owned:true, isNew:true },
+  { id:'napo', name:'Napo', emoji:'🐱', type:'history', typeLabel:'สายประวัติศาสตร์', stars:3, rarity:'Uncommon', xp:'+80', count:'x1', desc:'แมวสีทองนักนอน พบได้ตามสถานที่ประวัติศาสตร์ เช่น หอกลองและย่านเจริญกรุง', owned:true, isNew:false },
+  { id:'kopi', name:'Kopi', emoji:'🫖', type:'cafe', typeLabel:'สายคาเฟ่', stars:1, rarity:'Common', xp:'+30', count:'x1', desc:'เออร์บิตสายชาไทย อาศัยอยู่ในร้านชาโบราณย่านเยาวราช', owned:true, isNew:false },
+  { id:'trageon', name:'Trageon', emoji:'🕊️', type:'travel', typeLabel:'สายเดินทาง', stars:2, rarity:'Common', xp:'+50', count:'x0', desc:'นกพิราบชอบคาบแผนที่ พบตามสถานีรถไฟฟ้าและป้ายรถเมล์', owned:false },
+  { id:'railix', name:'Railix', emoji:'🚇', type:'travel', typeLabel:'สายเดินทาง', stars:3, rarity:'Uncommon', xp:'+80', count:'x0', desc:'เออร์บิตพลังงานไฟฟ้า อาศัยอยู่ในรถไฟฟ้าสายสีน้ำเงิน', owned:false },
+  { id:'drumbit', name:'Drumbit', emoji:'🥁', type:'history', typeLabel:'สายประวัติศาสตร์', stars:4, rarity:'Rare', xp:'+150', count:'x0', desc:'เออร์บิตหายากที่ปรากฏตัวเฉพาะในวันประวัติศาสตร์สำคัญ', owned:false },
+  { id:'floreon', name:'Floreon', emoji:'🌸', type:'cafe', typeLabel:'สายคาเฟ่', stars:2, rarity:'Common', xp:'+50', count:'x0', desc:'เออร์บิตกลิ่นดอกไม้ ซ่อนตัวอยู่ในคาเฟ่สวนสไตล์ botanical', owned:false },
+  { id:'skybit', name:'Skybit', emoji:'🌤️', type:'travel', typeLabel:'สายเดินทาง', stars:5, rarity:'Legendary', xp:'+300', count:'x0', desc:'เออร์บิตในตำนาน! ปรากฏตัวได้เฉพาะเมื่อท้องฟ้าแจ่มใสและคุณทำครบ 10 Quest', owned:false },
+  { id:'wongbit', name:'Wongbit', emoji:'🏮', type:'history', typeLabel:'สายประวัติศาสตร์', stars:3, rarity:'Uncommon', xp:'+80', count:'x0', desc:'ผีโคมไฟแห่งย่านเยาวราช รออยู่ที่ร้านขนมเก่าแก่ที่เปิดมาเกิน 50 ปี', owned:false },
+];
+
+let currentFilter = 'all';
+
+function renderGrid(filter) {
+  const grid = document.getElementById('urbitGrid');
+  grid.innerHTML = '';
+  URBITS.filter(u => filter === 'all' || u.type === filter).forEach(u => {
+    const tile = document.createElement('div');
+    tile.className = `urbit-tile ${u.type}${u.owned ? '' : ' locked'}`;
+    const starsHtml = Array.from({length:5}, (_,i) =>
+      `<span class="tile-star${i < u.stars ? '' : ' e'}">★</span>`).join('');
+    tile.innerHTML = `
+      ${u.owned && u.isNew ? '<div class="tile-new-badge">NEW</div>' : ''}
+      ${!u.owned ? '<div class="tile-lock-icon">🔒</div>' : ''}
+      <span class="tile-emoji">${u.emoji}</span>
+      <div class="tile-name">${u.name}</div>
+      <div class="tile-type">${u.typeLabel}</div>
+      <div class="tile-stars">${starsHtml}</div>
+    `;
+    if (u.owned) tile.onclick = () => openModal(u);
+    grid.appendChild(tile);
+  });
+}
+
+function filterCol(el, type) {
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('on'));
+  el.classList.add('on');
+  currentFilter = type;
+  renderGrid(type);
+}
+
+function openModal(u) {
+  document.getElementById('mEmoji').textContent = u.emoji;
+  document.getElementById('mName').textContent = u.name;
+  document.getElementById('mSub').textContent = `${u.typeLabel} • ${u.rarity}`;
+  document.getElementById('mXp').textContent = u.xp;
+  document.getElementById('mCount').textContent = u.count;
+  document.getElementById('mRarity').textContent = ['','⭐','⭐⭐','⭐⭐⭐','💎','👑'][u.stars] || '?';
+  document.getElementById('mDesc').textContent = u.desc;
+  const stars = document.getElementById('mStars');
+  stars.innerHTML = Array.from({length:5},(_,i)=>`<span class="rarity-star${i<u.stars?'':' empty'}">★</span>`).join('');
+  document.getElementById('detailModal').classList.add('open');
+}
+
+function closeModal(e) {
+  if (e.target.id === 'detailModal') document.getElementById('detailModal').classList.remove('open');
+}
+
+function goScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (id === 's4') launchConfetti();
+  if (id === 'scol') renderGrid(currentFilter);
+  if( id === 's3-solo') {
+    setTimeout(() => {
+      goScreen('s4');
+    }, 2000);
+  }
+}
+
+function switchTab(screenId, navId, idx) {
+  goScreen(screenId);
+  document.querySelectorAll(`#${navId} .nav-item`).forEach((n,i) => n.classList.toggle('active', i===idx));
+}
+
+function simulateScan() {
+  const btn = document.getElementById('scanBtn');
+  btn.textContent = '⏳ กำลังแสกน...';
+  btn.style.background = 'var(--gold)';
+  setTimeout(() => goScreen('s4'), 1200);
+}
+
+function launchConfetti() {
+  const canvas = document.getElementById('confettiCanvas');
+  const ctx = canvas.getContext('2d');
+  const pieces = [];
+  const colors = ['#ffd166','#ff6b35','#06d6a0','#a78bfa','#f472b6'];
+  for (let i=0;i<60;i++) pieces.push({ x:Math.random()*375, y:-10, r:Math.random()*4+2, color:colors[Math.floor(Math.random()*5)], vy:Math.random()*2+1, vx:Math.random()*2-1 });
+  let frame=0;
+  function draw() {
+    ctx.clearRect(0,0,375,100);
+    pieces.forEach(p=>{ ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=p.color;ctx.fill();p.y+=p.vy;p.x+=p.vx; });
+    frame++;
+    if(frame<140) requestAnimationFrame(draw);
+  }
+  draw();
+}
+
+document.querySelectorAll('.type-chip').forEach(chip => {
+  chip.addEventListener('click', function() {
+    document.querySelectorAll('.type-chip').forEach(c=>c.classList.remove('active'));
+    this.classList.add('active');
+  });
+});
+
+renderGrid('all');
+</script>
+</body>
+</html>
