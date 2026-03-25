@@ -262,15 +262,18 @@
   <div class="screen" id="s2">
     <div class="s2-header"><button class="back-btn" onclick="goScreen('s1')">←</button><span class="s2-title">จับคู่ Blind Match</span></div>
     <div class="match-zone">
-      <div class="blind-badge">🔒 Blind Mode • ไม่เห็นหน้ากัน</div>
       <div class="avatar-row">
-        <div><div class="avatar-blob you">🧑</div></div>
-        <div class="vs-text">VS</div>
-        <div><div class="avatar-blob them">🧑</div></div>
+      <div><div class="avatar-blob you">🧑</div></div>
+      <div class="vs-text">VS</div>
+      <div style="display: flex; flex-direction: column; align-items: center;">
+        <div class="avatar-blob them" onclick="openPartnerProfile()" style="cursor: pointer; border: 2px solid var(--lavender); box-shadow: 0 0 15px rgba(167,139,250,0.2); color: var(--text);">🧑</div>
+        <div style="font-size: 10px; color: var(--lavender); margin-top: 6px; font-weight: 800; letter-spacing: 0.5px;">แตะดูโปรไฟล์ 👆</div>
       </div>
+    </div>
       <div class="match-count">พบ 3 คน</div>
       <div style="font-size:12px;color:var(--mint)">✓ ยืนยันการจับคู่แล้ว!</div>
     </div>
+    
     <div class="location-card"><div class="location-icon">🐱</div><div><div class="loc-name">Old Town Walk</div></div></div>
     <div style="padding:0 20px 8px"><button class="cancel-btn" onclick="goScreen('s1')"> ยกเลิก</button></div>
     <div style="padding:0 20px 8px"><button class="confirm-btn" onclick="goScreen('s-chat')">✓ ยืนยัน & นัดพบ</button></div>
@@ -390,21 +393,41 @@
     </div>
   </div>
 
-  <div class="modal-overlay" id="detailModal" onclick="closeModal(event)">
-    <div class="modal-sheet" id="modalSheet">
+  <div class="modal-overlay" id="partnerModal" onclick="closePartnerModal(event)">
+    <div class="modal-sheet">
       <div class="modal-handle"></div>
-      <span class="modal-emoji" id="mEmoji"></span>
-      <div class="modal-name" id="mName"></div>
-      <div class="modal-sub" id="mSub"></div>
-      <div class="modal-stats">
-        <div class="stat"><div class="stat-val" id="mXp"></div><div class="stat-label">XP</div></div>
-        <div class="stat"><div class="stat-val" id="mRarity"></div><div class="stat-label">Rarity</div></div>
+      <div style="text-align: center;">
+        <div style="width: 80px; height: 80px; background: var(--card); border: 2px dashed var(--muted); border-radius: 50%; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center; font-size: 36px; color: var(--muted);">🧑</div>
+        
+        <div style="font-size: 22px; font-weight: 800; margin-bottom: 4px;">CatLover99</div>
+        <div style="font-size: 13px; color: var(--mint); margin-bottom: 20px; font-weight: 800;">✓ แมตช์ความสนใจ 85%</div>
+
+        <div class="profile-goal" style="background: var(--bg);">
+          <div class="goal-icon" style="width: 40px; height: 40px; font-size: 20px;">🎯</div>
+          <div class="goal-text">
+            <div class="goal-label">เป้าหมายของเขา</div>
+            <div class="goal-value">ตามหา Napo แมวนักนอน</div>
+          </div>
+        </div>
+        <div style="text-align: left;">
+          <div class="profile-section-title">ความสนใจ</div>
+          <div class="profile-tags" style="justify-content: flex-start;">
+            <span class="p-tag" style="border-color: var(--mint); color: var(--mint); background: rgba(6,214,160,0.1);">เล่นเกม</span>
+            <span class="p-tag">📸 ถ่ายรูปฟิล์ม</span>
+          </div>
+        </div>
+        <div style="text-align: left;">
+          <div class="profile-section-title">ความสนใจที่ตรงกัน</div>
+          <div class="profile-tags" style="justify-content: flex-start;">
+            <span class="p-tag" style="border-color: var(--mint); color: var(--mint); background: rgba(6,214,160,0.1);">🐈 ทาสแมว</span>
+            <span class="p-tag" style="border-color: var(--mint); color: var(--mint); background: rgba(6,214,160,0.1);">🏛️ ชอบเดินเมืองเก่า</span>
+            <span class="p-tag">📸 ถ่ายรูปฟิล์ม</span>
+          </div>
+        </div>
       </div>
-      <div class="modal-desc" id="mDesc"></div>
-      <button class="modal-close" onclick="document.getElementById('detailModal').classList.remove('open')">ปิด</button>
+      <button class="modal-close" style="margin-top: 16px; background: var(--card2);" onclick="document.getElementById('partnerModal').classList.remove('open')">ปิดหน้าต่าง</button>
     </div>
   </div>
-
   <div class="screen" id="sprofile">
     <div class="s1-header"><span class="logo">Profile 👤</span></div>
     <div style="padding: 24px 20px; text-align: center;">
@@ -491,6 +514,17 @@ function triggerScan(targetId) {
     overlay.classList.remove('active');
     unlockUrbit(targetId);
   }, 1500);
+}
+// ---- Partner Profile Modal ----
+function openPartnerProfile() {
+  document.getElementById('partnerModal').classList.add('open');
+}
+
+function closePartnerModal(e) {
+  // ปิดเมื่อกดโดนพื้นที่สีดำข้างนอก Modal
+  if(e.target.id === 'partnerModal') {
+    document.getElementById('partnerModal').classList.remove('open');
+  }
 }
 
 function unlockUrbit(id) {
